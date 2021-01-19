@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/frameDoubt/tinyapp/issues"
   },
-  "homepage": "https://github.com/frameDoubt/tinyapp#readme"
+  "homepage": "https://github.com/frameDoubt/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
 }
