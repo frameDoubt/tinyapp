@@ -5,11 +5,11 @@ const PORT = 8080;
 
 const generateRandomString = function() {
   let alphNumArr = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-  for (i = 0; i < 6; i++) {
   let retStr = "";
-  retStr += alphNumArr[Math.floor(Math.random() * alphNumArr.length)];
-  return retStr;
+  for (i = 0; i < 6; i++) {
+    retStr += alphNumArr[Math.floor(Math.random() * alphNumArr.length)];
   };
+  return retStr;
 }
 
 
@@ -43,16 +43,20 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send("Ok");
-});
+
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: req.params.urlDatabase };
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
   res.render("urls_show", templateVars);
 });
 
+app.post("/urls", (req, res) => {
+  let shortURL = generateRandomString();
+  urlDatabase[shortURL] = req.body.longURL;
+  // console.log(urlDatabase);
+  // res.send("Ok");
+  res.redirect(`/urls/${shortURL}`);
+});
 // app.get("/set", (req, res) => {
 //   const a = 1;
 //   res.send(`a = ${a}`);
