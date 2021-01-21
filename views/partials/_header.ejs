@@ -10,8 +10,14 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-    <h3>
-      <%= username %>
-    </h3>
+    <% if (username) { %>
+    <h3><%= username %></h3>
+    <% } else { %>
+      <form action="/login" method="POST">
+        <label for="username">Username</label>
+        <input type="text" name="username">
+        <button type="submit">Submit</button>
+      </form>
+      <% } %>
   </nav>
 </header>
