@@ -17,6 +17,15 @@ const generateRandomString = function() {
   return retStr;
 };
 
+const emailFinder = function (email, obj) {
+  let myArr = Object.keys(obj);
+  for (let ids of myArr) {
+    if (ids.email === email) {
+      return true;
+    }
+  }
+};
+
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouse.ca",
   "9sm5xK": "http://www.google.com"
@@ -45,7 +54,7 @@ app.get("/urls", (req, res) => {
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user_id: req.cookies["user_id"], email: user[req.cookies.user_id] };
+  const templateVars = { user_id: req.cookies["user_id"], email: user[req.cookies.user_id]["email"] };
   res.render("urls_new", templateVars);
 });
 
@@ -60,14 +69,20 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  let randUserID = generateRandomString();
-  user[randUserID] = {
-    id: randUserID,
-    email: req.body.email,
-    password: req.body.password
-  };
-  res.cookie("user_id", randUserID);
-  res.redirect("/urls")
+  if (!emailFinder(req.body.email, user)) {
+    res.status(400).send('Oops a user already has that email.');
+  } else if (req.body.email || req.body.password) {
+    let randUserID = generateRandomString();
+    user[randUserID] = {
+      id: randUserID,
+      email: req.body.email,
+      password: req.body.password
+    };
+    res.cookie("user_id", randUserID);
+    res.redirect("/urls");
+  } else {
+    res.status(400).send('Oops something went wrong.');
+  }
 });
 
 app.post("/login", (req, res) => {
