@@ -49,8 +49,16 @@ app.get("/register", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    let tempVar = { urls: urlDatabase, email: 0 };
+    res.render("urls_index", tempVar);
+  }
   const templateVars = { urls: urlDatabase, user_id: req.cookies["user_id"], email: user[req.cookies.user_id]["email"] };
   res.render("urls_index", templateVars);
+});
+
+app.get("/login", (req, res) => {
+  res.render("urls_login");
 });
 
 app.get("/urls/new", (req, res) => {
@@ -69,7 +77,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if (!emailFinder(req.body.email, user)) {
+  if (emailFinder(req.body.email, user)) {
     res.status(400).send('Oops a user already has that email.');
   } else if (req.body.email || req.body.password) {
     let randUserID = generateRandomString();
@@ -91,7 +99,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("user_id");
   res.redirect("/urls");
 });
 
