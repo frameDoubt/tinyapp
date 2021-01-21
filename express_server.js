@@ -60,9 +60,8 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-  console.log(req);
   urlDatabase[req.params.shortURL] = req.body.longURL;
-  res.redirect('/urls_index')
+  res.redirect('/urls');
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
