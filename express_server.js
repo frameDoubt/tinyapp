@@ -92,7 +92,7 @@ app.get("/login", (req, res) => {
 app.get("/urls/new", (req, res) => {
   if (!req.cookies["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
-    res.render("urls_new", tempVar);
+    res.render("urls_login", tempVar);
   }
   const templateVars = { 
     user_id: req.cookies["user_id"], 
