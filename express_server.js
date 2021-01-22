@@ -35,9 +35,13 @@ const emailFinder = function (email, obj) {
   }
 };
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouse.ca",
-  "9sm5xK": "http://www.google.com"
+let urlDatabase = {
+  "b2xVn2": { 
+    longURL: "http://www.lighthouse.ca", userID: "aJ48lW"
+ },
+  "9sm5xK": { 
+    longURL: "http://www.google.com", userID: "aJ48lW"
+ }
 };
 
 const user = {
@@ -88,7 +92,7 @@ app.get("/login", (req, res) => {
 app.get("/urls/new", (req, res) => {
   if (!req.cookies["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
-    res.render("urls_index", tempVar);
+    res.render("urls_new", tempVar);
   }
   const templateVars = { 
     user_id: req.cookies["user_id"], 
@@ -103,7 +107,17 @@ app.get("/u/:shortURL", (req, res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL], user_id: req.cookies["user_id"], email: user[req.cookies.user_id] };
+  if (!req.cookies["user_id"]) {
+    let tempVar = { urls: urlDatabase, email: 0, shortURL: req.params.shortURL, 
+      longURL: urlDatabase[req.params.shortURL]["longURL"] };
+    res.render("urls_show", tempVar);
+  }
+  const templateVars = { 
+    shortURL: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL]["longURL"], 
+    user_id: req.cookies["user_id"], 
+    email: user[req.cookies.user_id]["email"] 
+  };
   res.render("urls_show", templateVars);
 });
 
@@ -142,13 +156,21 @@ app.post("/logout", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  let shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  if (!req.cookies["user_id"]) {
+    res.redirect("/login");
+  }
+  console.log(req.body.longURL);
+  const shortURL = generateRandomString();
+  urlDatabase[shortURL] = {
+    shortURL: shortURL,
+    longURL: req.body["longURL"],
+    userID: req.cookies["user_id"]
+  }
   res.redirect(`/urls/${shortURL}`);
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.longURL;
+  urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
   res.redirect('/urls');
 });
 
