@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
 const PORT = 8080;
 const { emailFinder, IDFinder, generateRandomString } = require('./helperFunctions');
 
@@ -28,18 +29,17 @@ const user = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple"
+    password: "$2b$10$RP24GkddyO/7CCF0nl4zHOexhAnT4E1.u6.z0LtnARYtpr6NQKr5a"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "placeholder"
   }
 };
 
 const urlsForUser = function(id) {
   let keys = Object.keys(urlDatabase);
-  console.log(keys);
   let userURLData = {};
   for (let value of keys) {
     if (urlDatabase[value]["userID"] === id) {
@@ -114,14 +114,17 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/register", (req, res) => {
-  if (emailFinder(req.body.email, user)) {
+  let regEmail = req.body.email;
+  let regPass = req.body.password;
+  if (emailFinder(regEmail, user)) {
     res.status(400).send('Oops a user already has that email.');
-  } else if (req.body.email || req.body.password) {
+  } else if (regEmail || req.body.password) {
+    let hashedPword = bcrypt.hashSync(req.body.password, 10);
     let randUserID = generateRandomString();
     user[randUserID] = {
       id: randUserID,
-      email: req.body.email,
-      password: req.body.password
+      email: regEmail,
+      password: hashedPword
     };
     res.cookie("user_id", randUserID);
     res.redirect("/urls");
@@ -132,7 +135,11 @@ app.post("/register", (req, res) => {
 
 app.post("/login", (req, res) => {
   let userID = IDFinder(req.body.email, user);
-  if (emailFinder(req.body.email, user) && req.body.password === user[userID]["password"]) {
+  let inputPass = req.body.password;
+  let inputEmail = req.body.email;
+  let hashMatch = bcrypt.compareSync(inputPass, user[userID]["password"]);
+
+  if (emailFinder(inputEmail, user) && hashMatch) {
     res.cookie("user_id", userID);
     res.redirect("/urls");
   } else if (!emailFinder(req.body.email, user)) {
