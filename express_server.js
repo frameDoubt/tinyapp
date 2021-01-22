@@ -17,10 +17,19 @@ const generateRandomString = function() {
   return retStr;
 };
 
+const IDFinder = (reqParam, obj) => {
+  let keys = Object.keys(obj);
+  for (ids of keys) {
+    if (obj[ids]['email'] === reqParam) {
+      return obj[ids]["id"];
+    }
+  }
+};
+
 const emailFinder = function (email, obj) {
   let myArr = Object.keys(obj);
   for (let ids of myArr) {
-    if (ids.email === email) {
+    if (obj[ids]["email"] === email) {
       return true;
     }
   }
@@ -35,7 +44,7 @@ const user = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "purple"
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -45,7 +54,14 @@ const user = {
 };
 
 app.get("/register", (req, res) => {
-  res.render("urls_register");
+  if (!req.cookies["user_id"]) {
+    let tempVar = { urls: urlDatabase, email: 0 };
+    res.render("urls_register", tempVar);
+  }
+  res.render("urls_register", { 
+    urls: urlDatabase, 
+    user_id: req.cookies["user_id"], 
+    email: user[req.cookies.user_id]["email"] });
 });
 
 app.get("/urls", (req, res) => {
@@ -53,16 +69,31 @@ app.get("/urls", (req, res) => {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_index", tempVar);
   }
-  const templateVars = { urls: urlDatabase, user_id: req.cookies["user_id"], email: user[req.cookies.user_id]["email"] };
+  const templateVars = { 
+    urls: urlDatabase, 
+    user_id: req.cookies["user_id"], 
+    email: user[req.cookies.user_id]["email"] 
+  };
   res.render("urls_index", templateVars);
 });
 
 app.get("/login", (req, res) => {
+  if (!req.cookies["user_id"]) {
+    let tempVar = { urls: urlDatabase, email: 0 };
+    res.render("urls_login", tempVar);
+  }
   res.render("urls_login");
 });
 
 app.get("/urls/new", (req, res) => {
-  const templateVars = { user_id: req.cookies["user_id"], email: user[req.cookies.user_id]["email"] };
+  if (!req.cookies["user_id"]) {
+    let tempVar = { urls: urlDatabase, email: 0 };
+    res.render("urls_index", tempVar);
+  }
+  const templateVars = { 
+    user_id: req.cookies["user_id"], 
+    email: user[req.cookies.user_id]["email"] 
+  };
   res.render("urls_new", templateVars);
 });
 
@@ -94,8 +125,15 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  res.cookie("username", req.body.username);
-  res.redirect("/urls");
+  let userID = IDFinder(req.body.email, user);
+  if (emailFinder(req.body.email, user) && req.body.password === user[userID]["password"]) {
+    res.cookie("user_id", userID);
+    res.redirect("/urls");
+  } else if (!emailFinder(req.body.email, user)) {
+    res.status(403).send("Oops something went wrong. Don't worry we're on it.");
+  } else {
+    res.status(403).send("Sure hope you know what you're doing!");
+  }
 });
 
 app.post("/logout", (req, res) => {
