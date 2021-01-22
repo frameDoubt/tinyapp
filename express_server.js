@@ -3,37 +3,13 @@ const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const PORT = 8080;
+const IDFinder = require('./helperFunctions');
+const emailFinder = require('./helperFunctions');
+const generateRandomString = require('./helperFunctions');
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
-
-const generateRandomString = function() {
-  let alphNumArr = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-  let retStr = "";
-  for (i = 0; i < 6; i++) {
-    retStr += alphNumArr[Math.floor(Math.random() * alphNumArr.length)];
-  };
-  return retStr;
-};
-
-const IDFinder = (reqParam, obj) => {
-  let keys = Object.keys(obj);
-  for (ids of keys) {
-    if (obj[ids]['email'] === reqParam) {
-      return obj[ids]["id"];
-    }
-  }
-};
-
-const emailFinder = function (email, obj) {
-  let myArr = Object.keys(obj);
-  for (let ids of myArr) {
-    if (obj[ids]["email"] === email) {
-      return true;
-    }
-  }
-};
 
 let urlDatabase = {
   "b2xVn2": { 
