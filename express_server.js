@@ -3,9 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const PORT = 8080;
-const IDFinder = require('./helperFunctions');
-const emailFinder = require('./helperFunctions');
-const generateRandomString = require('./helperFunctions');
+const { emailFinder, IDFinder, generateRandomString } = require('./helperFunctions');
 
 app.set("view engine", "ejs");
 app.use(cookieParser());
@@ -17,7 +15,13 @@ let urlDatabase = {
  },
   "9sm5xK": { 
     longURL: "http://www.google.com", userID: "aJ48lW"
- }
+ },
+  "h6sie9": {
+    longURL: "http://www.msn.ca", userID: "userRandomID" 
+  },
+  "wp2n95": {
+    longURL: "http://www.yahoo.ca", userID: "user2RandomID"
+  }
 };
 
 const user = {
@@ -32,6 +36,18 @@ const user = {
     password: "dishwasher-funk"
   }
 };
+
+const urlsForUser = function(id) {
+  let keys = Object.keys(urlDatabase);
+  console.log(keys);
+  let userURLData = {};
+  for (let value of keys) {
+    if (urlDatabase[value]["userID"] === id) {
+      userURLData[value] = urlDatabase[value];
+    }
+  }
+  return userURLData;
+}
 
 app.get("/register", (req, res) => {
   if (!req.cookies["user_id"]) {
@@ -50,9 +66,9 @@ app.get("/urls", (req, res) => {
     res.render("urls_index", tempVar);
   }
   const templateVars = { 
-    urls: urlDatabase, 
+    urls: urlsForUser(req.cookies["user_id"]),
     user_id: req.cookies["user_id"], 
-    email: user[req.cookies.user_id]["email"] 
+    email: user[req.cookies.user_id]["email"]
   };
   res.render("urls_index", templateVars);
 });
@@ -135,7 +151,6 @@ app.post("/urls", (req, res) => {
   if (!req.cookies["user_id"]) {
     res.redirect("/login");
   }
-  console.log(req.body.longURL);
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     shortURL: shortURL,
@@ -146,15 +161,25 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/urls/:shortURL/edit", (req, res) => {
-  urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
-  res.redirect('/urls');
+  if (urlDatabase[req.params.shortURL]["userID"] === req.cookies["user_id"]) {
+    urlDatabase[req.params.shortURL]["longURL"] = req.body.longURL;
+    res.redirect('/urls');
+  } else {
+    res.send("Your account isn't allowed to edit this content.");
+  }
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL];
-  res.redirect(`/urls`);
+  if (urlDatabase[req.params.shortURL]["userID"] === req.cookies["user_id"]) {
+    delete urlDatabase[req.params.shortURL];
+    res.redirect(`/urls`);
+  } else {
+    res.send("Your account isn't allowed to delete this content.");
+  }
 });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+module.exports = { urlDatabase };

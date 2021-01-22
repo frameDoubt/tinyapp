@@ -1,3 +1,4 @@
+
 const IDFinder = function(reqParam, obj) {
   let keys = Object.keys(obj);
   for (ids of keys) {
@@ -25,17 +26,4 @@ const generateRandomString = function() {
   return retStr;
 };
 
-const urlsForUser = function(id) {
-  let keys = Object.keys(urlDatabase);
-  let x = 0;
-  let userURLData = {};
-  for (let value of keys) {
-    if (urlDatabase[value]["userID"] === id) {
-      userURLData[value] = urlDatabase[value];
-      x++;
-    }
-  }
-  return userURLData;
-}
-
-module.exports = { IDFinder, emailFinder, generateRandomString, urlsForUser };
+module.exports = { IDFinder, emailFinder, generateRandomString};
