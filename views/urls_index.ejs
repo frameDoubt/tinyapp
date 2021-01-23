@@ -13,6 +13,9 @@
   <% } else { %>
   <main style="margin: 1em;">
     <h3>My URLs</h3>
+    <form action="/urls/new" method="GET">
+      <button type="submit">Create New Short Link</button>
+    </form>
     <table class="table">
       <thead>
         <tr>
@@ -41,6 +44,11 @@
         <% } %>
       </tbody>
     </table>
+    <form action="/urls" method="POST">
+      <label for="longURL">Add long URL to table here:</label>
+      <input type="url" name="longURL" placeholder="http://">
+      <button type="submit">Submit</button>
+    </form>
     <% } %>
   </main> 
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>

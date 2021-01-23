@@ -8,21 +8,21 @@ const PORT = 8080;
 const { emailFinder, IDFinder, generateRandomString } = require('./helperFunctions');
 
 app.set("view engine", "ejs");
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: "user_name",
   keys: ['secret-cypher', "superFunFun", "happy-happy-joy-joy"]
 }));
 
 let urlDatabase = {
-  "b2xVn2": { 
+  "b2xVn2": {
     longURL: "http://www.lighthouse.ca", userID: "aJ48lW"
- },
-  "9sm5xK": { 
+  },
+  "9sm5xK": {
     longURL: "http://www.google.com", userID: "aJ48lW"
- },
+  },
   "h6sie9": {
-    longURL: "http://www.msn.ca", userID: "userRandomID" 
+    longURL: "http://www.msn.ca", userID: "userRandomID"
   },
   "wp2n95": {
     longURL: "http://www.yahoo.ca", userID: "user2RandomID"
@@ -42,7 +42,7 @@ const user = {
   }
 };
 
-const urlsForUser = function(id) {
+const urlsForUser = function (id) {
   let keys = Object.keys(urlDatabase);
   let userURLData = {};
   for (let value of keys) {
@@ -53,15 +53,23 @@ const urlsForUser = function(id) {
   return userURLData;
 }
 
+app.get("/", (req, res) => {
+  if (!req.session["user_id"]) {
+    res.redirect("/login");
+  }
+  res.redirect("/urls");
+});
+
 app.get("/register", (req, res) => {
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_register", tempVar);
   }
-  res.render("urls_register", { 
-    urls: urlDatabase, 
-    user_id: req.session["user_id"], 
-    email: user[req.session.user_id]["email"] });
+  res.render("urls_register", {
+    urls: urlDatabase,
+    user_id: req.session["user_id"],
+    email: user[req.session.user_id]["email"]
+  });
 });
 
 app.get("/urls", (req, res) => {
@@ -69,9 +77,9 @@ app.get("/urls", (req, res) => {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_index", tempVar);
   }
-  const templateVars = { 
+  const templateVars = {
     urls: urlsForUser(req.session["user_id"]),
-    user_id: req.session["user_id"], 
+    user_id: req.session["user_id"],
     email: user[req.session.user_id]["email"]
   };
   res.render("urls_index", templateVars);
@@ -90,29 +98,34 @@ app.get("/urls/new", (req, res) => {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_login", tempVar);
   }
-  const templateVars = { 
-    user_id: req.session["user_id"], 
-    email: user[req.session.user_id]["email"] 
+  const templateVars = {
+    user_id: req.session["user_id"],
+    email: user[req.session.user_id]["email"]
   };
   res.render("urls_new", templateVars);
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL]["longURL"];
   res.redirect(longURL);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.session["user_id"]) {
-    let tempVar = { urls: urlDatabase, email: 0, shortURL: req.params.shortURL, 
-      longURL: urlDatabase[req.params.shortURL]["longURL"] };
+    let tempVar = {
+      urls: urlDatabase, email: 0, shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL]["longURL"]
+    };
     res.render("urls_show", tempVar);
   }
-  const templateVars = { 
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL]["longURL"], 
-    user_id: req.session["user_id"], 
-    email: user[req.session.user_id]["email"] 
+  if (!Object.values(urlDatabase).indexOf(req.params.shortURL) > 0) {
+    res.send("Sorry that URL, doesn't exist");
+  }
+  const templateVars = {
+    shortURL: req.params.shortURL,
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
+    user_id: req.session["user_id"],
+    email: user[req.session.user_id]["email"]
   };
   res.render("urls_show", templateVars);
 });
@@ -141,7 +154,7 @@ app.post("/login", (req, res) => {
   let userID = IDFinder(req.body.email, user);
   let inputPass = req.body.password;
   let inputEmail = req.body.email;
-  let hashMatch = bcrypt.compareSync(inputPass, user[userID]["password"]); 
+  let hashMatch = bcrypt.compareSync(inputPass, user[userID]["password"]);
   if (emailFinder(inputEmail, user) && hashMatch) {
     req.session.user_id = userID;
     res.redirect("/urls");
@@ -153,7 +166,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
+  req.session.user_id = null;
   res.redirect("/urls");
 });
 
