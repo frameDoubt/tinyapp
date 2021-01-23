@@ -130,7 +130,6 @@ app.post("/register", (req, res) => {
       email: regEmail,
       password: hashedPword
     };
-    // res.cookie("user_id", randUserID);
     req.session.user_id = randUserID;
     res.redirect("/urls");
   } else {
@@ -144,7 +143,6 @@ app.post("/login", (req, res) => {
   let inputEmail = req.body.email;
   let hashMatch = bcrypt.compareSync(inputPass, user[userID]["password"]); 
   if (emailFinder(inputEmail, user) && hashMatch) {
-    // res.cookie("user_id", userID);
     req.session.user_id = userID;
     res.redirect("/urls");
   } else if (!emailFinder(req.body.email, user)) {
