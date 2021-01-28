@@ -1,19 +1,21 @@
 const express = require('express');
 const app = express();
 const bodyParser = require("body-parser");
-// const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 const PORT = 8080;
-const { emailFinder, IDFinder, generateRandomString } = require('./helperFunctions');
+const { emailFinder, IDFinder, generateRandomString, urlsForUser } = require('./helperFunctions');
 
+// ejs html js hybrid template system
 app.set("view engine", "ejs");
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieSession({
   name: "user_name",
   keys: ['secret-cypher', "superFunFun", "happy-happy-joy-joy"]
 }));
 
+// tester code url database
 let urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouse.ca", userID: "aJ48lW"
@@ -28,7 +30,7 @@ let urlDatabase = {
     longURL: "http://www.yahoo.ca", userID: "user2RandomID"
   }
 };
-
+// tester code user objects
 const user = {
   "userRandomID": {
     id: "userRandomID",
@@ -41,17 +43,6 @@ const user = {
     password: "placeholder"
   }
 };
-
-const urlsForUser = function (id) {
-  let keys = Object.keys(urlDatabase);
-  let userURLData = {};
-  for (let value of keys) {
-    if (urlDatabase[value]["userID"] === id) {
-      userURLData[value] = urlDatabase[value];
-    }
-  }
-  return userURLData;
-}
 
 app.get("/", (req, res) => {
   if (!req.session["user_id"]) {
@@ -150,11 +141,18 @@ app.post("/register", (req, res) => {
   }
 });
 
+// login post request handler
 app.post("/login", (req, res) => {
+  // variables recieved from form post request
+  // and hash comparison result
   let userID = IDFinder(req.body.email, user);
   let inputPass = req.body.password;
   let inputEmail = req.body.email;
   let hashMatch = bcrypt.compareSync(inputPass, user[userID]["password"]);
+
+  // if emailFinder() and password input comparison evaluate to true
+  // cookie is given to user else if given email or password is not in data
+  //  403 status is sent back with a message
   if (emailFinder(inputEmail, user) && hashMatch) {
     req.session.user_id = userID;
     res.redirect("/urls");
@@ -165,21 +163,29 @@ app.post("/login", (req, res) => {
   }
 });
 
+// logout post handler
 app.post("/logout", (req, res) => {
+  // recieves post request from button
+  // removes user's cookie
   req.session.user_id = null;
   res.redirect("/urls");
 });
 
+// new url post request handler
 app.post("/urls", (req, res) => {
+  // if user has no cookie user is asked is sent to login page
   if (!req.session["user_id"]) {
     res.redirect("/login");
   }
+  // random 6 digit alphanumeric string
   const shortURL = generateRandomString();
+  // new url with shortURL added to database
   urlDatabase[shortURL] = {
     shortURL: shortURL,
     longURL: req.body["longURL"],
     userID: req.session["user_id"]
   }
+  // redirected to newly created URL viewing page
   res.redirect(`/urls/${shortURL}`);
 });
 
