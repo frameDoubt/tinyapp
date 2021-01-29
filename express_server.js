@@ -58,6 +58,7 @@ app.get("/", (req, res) => {
 
 // register route handler
 app.get("/register", (req, res) => {
+  // checks for cookie if none user assigned default value
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_register", tempVar);
@@ -70,8 +71,8 @@ app.get("/register", (req, res) => {
 });
 
 // urls index page route handler
-// if user doesn't have a cookie default values are assigned
 app.get("/urls", (req, res) => {
+  // checks for cookie if none user assigned default value
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_index", tempVar);
@@ -86,8 +87,8 @@ app.get("/urls", (req, res) => {
 });
 
 // login route handler
-// if user has no cookie they're assigned default values
 app.get("/login", (req, res) => {
+  // checks for cookie if none user assigned default value
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_login", tempVar);
@@ -110,13 +111,20 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+// uses endpoint to search for shortURL
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]["longURL"];
-  res.redirect(longURL);
+  let userShortSearch = req.params.shortURL;
+  if (!urlDatabase[userShortSearch]) {
+    res.send("Sorry that URL doesn't exist")
+  } else {
+    const longURL = urlDatabase[req.params.shortURL]["longURL"];
+    res.redirect(longURL);
+  }
 });
 
 // direct get of shortURL
 app.get("/urls/:shortURL", (req, res) => {
+  // checks for cookie if none user assigned default value
   if (!req.session["user_id"]) {
     let tempVar = {
       urls: urlDatabase, email: 0, shortURL: req.params.shortURL,
@@ -145,6 +153,8 @@ app.post("/register", (req, res) => {
   let regPass = req.body.password;
   if (emailFinder(regEmail, user)) {
     res.status(400).send('Oops a user already has that email.');
+  } else if (!regEmail || !regPass) {
+    res.send("Please fill fields before submission");
   } else if (regEmail || regPass) {
     let hashedPword = bcrypt.hashSync(regPass, 10);
     let randUserID = generateRandomString();
@@ -155,8 +165,6 @@ app.post("/register", (req, res) => {
     };
     req.session.user_id = randUserID;
     res.redirect("/urls");
-  } else {
-    res.status(400).send('Oops something went wrong.');
   }
 });
 
@@ -164,22 +172,26 @@ app.post("/register", (req, res) => {
 app.post("/login", (req, res) => {
   // variables recieved from form post request
   // and hash comparison result
-  let userID = IDFinder(req.body.email, user);
   let inputPass = req.body.password;
   let inputEmail = req.body.email;
+  if (!emailFinder(inputEmail, user)) {
+    res.send("Oops something went wrong. Don't worry we're on it. email");
+  }
+  let userID = IDFinder(req.body.email, user);
   let hashMatch = bcrypt.compareSync(inputPass, user[userID]["password"]);
-
+  if (!hashMatch) {
+    res.send("Oops something went wrong. Don't worry we're on it. pWord");
+  };
   // if emailFinder() and password input comparison evaluate to true
   // cookie is given to user else if given email or password is not in data
   //  403 status is sent back with a message
   if (emailFinder(inputEmail, user) && hashMatch) {
     req.session.user_id = userID;
     res.redirect("/urls");
-  } else if (!emailFinder(req.body.email, user)) {
-    res.status(403).send("Oops something went wrong. Don't worry we're on it.");
-  } else {
-    res.status(403).send("Sure hope you know what you're doing!");
-  }
+  } 
+  // else if (!emailFinder(req.body.email, user)) {
+  //   res.status(403).send("Oops something went wrong. Don't worry we're on it.");
+  // }
 });
 
 // logout post handler
