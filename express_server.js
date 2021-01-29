@@ -9,7 +9,10 @@ const { emailFinder, IDFinder, generateRandomString, urlsForUser } = require('./
 // ejs html js hybrid template system
 app.set("view engine", "ejs");
 
+// parses incoming request body
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// library used to hash cookie data
 app.use(cookieSession({
   name: "user_name",
   keys: ['secret-cypher', "superFunFun", "happy-happy-joy-joy"]
@@ -44,6 +47,8 @@ const user = {
   }
 };
 
+// root route handler redirects to login 
+// if user has no cookie else redirects urls/index page
 app.get("/", (req, res) => {
   if (!req.session["user_id"]) {
     res.redirect("/login");
@@ -51,6 +56,7 @@ app.get("/", (req, res) => {
   res.redirect("/urls");
 });
 
+// register route handler
 app.get("/register", (req, res) => {
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
@@ -63,11 +69,14 @@ app.get("/register", (req, res) => {
   });
 });
 
+// urls index page route handler
+// if user doesn't have a cookie default values are assigned
 app.get("/urls", (req, res) => {
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_index", tempVar);
   }
+  // this part represents the success route
   const templateVars = {
     urls: urlsForUser(req.session["user_id"]),
     user_id: req.session["user_id"],
@@ -76,19 +85,24 @@ app.get("/urls", (req, res) => {
   res.render("urls_index", templateVars);
 });
 
+// login route handler
+// if user has no cookie they're assigned default values
 app.get("/login", (req, res) => {
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_login", tempVar);
   }
-  res.render("urls_login");
+  res.redirect("/urls");
 });
 
+// new URL page route handler
 app.get("/urls/new", (req, res) => {
+  // if no cookie is detected redirected to login page
   if (!req.session["user_id"]) {
-    let tempVar = { urls: urlDatabase, email: 0 };
-    res.render("urls_login", tempVar);
+    res.redirect("/login");
   }
+  // else cookie parameters passed template variables
+  // and template is urls_new template rendered
   const templateVars = {
     user_id: req.session["user_id"],
     email: user[req.session.user_id]["email"]
@@ -101,6 +115,7 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(longURL);
 });
 
+// direct get of shortURL
 app.get("/urls/:shortURL", (req, res) => {
   if (!req.session["user_id"]) {
     let tempVar = {
@@ -112,13 +127,17 @@ app.get("/urls/:shortURL", (req, res) => {
   if (!Object.values(urlDatabase).indexOf(req.params.shortURL) > 0) {
     res.send("Sorry that URL, doesn't exist");
   }
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL]["longURL"],
-    user_id: req.session["user_id"],
-    email: user[req.session.user_id]["email"]
-  };
-  res.render("urls_show", templateVars);
+  if (urlDatabase[req.params.shortURL]["userID"] === req.session["user_id"]) {
+    const templateVars = {
+      shortURL: req.params.shortURL,
+      longURL: urlDatabase[req.params.shortURL]["longURL"],
+      user_id: req.session["user_id"],
+      email: user[req.session.user_id]["email"]
+    };
+    res.render("urls_show", templateVars);
+  } else {
+    res.send("Your account isn't allowed to view this content.");
+  }
 });
 
 app.post("/register", (req, res) => {
