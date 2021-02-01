@@ -1,18 +1,15 @@
-// import required for urlsForUser()
-let urlDatabase = require('./express_server');
 
-// finds URLs in urlDatabase for given user ID
-const urlsForUser = function (id) {
-  let keys = Object.keys(urlDatabase);
-  let userURLData = {};
-  for (let value of keys) {
-    if (urlDatabase[value]["userID"] === id) {
-      userURLData[value] = urlDatabase[value];
+const urlsForUser = function (id, givenObj) {
+  const keys = Object.keys(givenObj);
+  const userURLData = {};
+  for (const value of keys) {
+    if (givenObj[value]["userID"] === id) {
+      userURLData[value] = givenObj[value];
     }
   }
   return userURLData;
 }
-
+// console.log(urlsForUser("userRandomID"));
 // find ID from given email
 const IDFinder = function(reqParam, obj) {
   let keys = Object.keys(obj);

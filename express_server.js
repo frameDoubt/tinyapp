@@ -19,7 +19,7 @@ app.use(cookieSession({
 }));
 
 // tester code url database
-let urlDatabase = {
+const urlDatabase = {
   "b2xVn2": {
     longURL: "http://www.lighthouse.ca", userID: "aJ48lW"
   },
@@ -44,6 +44,11 @@ const user = {
     id: "user2RandomID",
     email: "user2@example.com",
     password: "placeholder"
+  },
+  "aJ48lW": {
+    id: "aJ48lW",
+    email: "winterfell@theNorth.com",
+    password: "$2b$10$RP24GkddyO/7CCF0nl4zHOexhAnT4E1.u6.z0LtnARYtpr6NQKr5a"
   }
 };
 
@@ -76,14 +81,16 @@ app.get("/urls", (req, res) => {
   if (!req.session["user_id"]) {
     let tempVar = { urls: urlDatabase, email: 0 };
     res.render("urls_index", tempVar);
-  }
+  } else {  
   // this part represents the success route
   const templateVars = {
-    urls: urlsForUser(req.session["user_id"]),
+    urls: urlsForUser(req.session["user_id"], urlDatabase),
     user_id: req.session["user_id"],
     email: user[req.session.user_id]["email"]
   };
+  console.log(templateVars['urls']);
   res.render("urls_index", templateVars);
+  };
 });
 
 // login route handler
@@ -189,9 +196,6 @@ app.post("/login", (req, res) => {
     req.session.user_id = userID;
     res.redirect("/urls");
   } 
-  // else if (!emailFinder(req.body.email, user)) {
-  //   res.status(403).send("Oops something went wrong. Don't worry we're on it.");
-  // }
 });
 
 // logout post handler
@@ -241,5 +245,3 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
-
-module.exports = { urlDatabase };
